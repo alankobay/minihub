@@ -1,0 +1,54 @@
+FROM php:8.2-alpine3.17
+
+# Install dependencies
+RUN apk add --no-cache \
+    bash \
+    curl \
+    zip
+
+# PHP Extensions Installer
+RUN curl -sSLf \
+    -o /usr/local/bin/install-php-extensions \
+    https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions && \
+    chmod +x /usr/local/bin/install-php-extensions
+
+RUN install-php-extensions \
+    bcmath \
+    calendar \
+    curl \
+    exif \
+    ffi \
+    gd \
+    gettext \
+    imap \
+    intl \
+    igbinary \
+    mbstring \
+    memcached \
+    mysqli \
+    pcov \
+    pcntl \
+    redis \
+    soap \
+    shmop \
+    sockets \
+    sysvmsg \
+    sysvsem \
+    sysvshm \
+    xml \
+    xsl \
+    opcache \
+    zip \
+    @composer
+
+COPY . /var/www
+
+# Add local and global vendor bin to PATH.
+ENV PATH ./vendor/bin:/composer/vendor/bin:/root/.composer/vendor/bin:/usr/local/bin:$PATH
+
+# Setup working directory
+WORKDIR /var/www
+
+COPY .env.example .env
+
+RUN composer install --prefer-dist --no-interaction --no-progress

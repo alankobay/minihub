@@ -1,0 +1,60 @@
+grumphp:
+    process_timeout: 280
+    tasks:
+        phpcs:
+            standard: ['PSR12']
+            whitelist_patterns: ['/app/']
+            triggered_by: ['php']
+
+        phpmd:
+            exclude: ['tests', 'database']
+            ruleset: ['phpmd.xml']
+            triggered_by: ['php']
+
+        phpstan:
+            autoload_file: ~
+            configuration: phpstan.neon
+            triggered_by: ['php']
+            memory_limit: '-1'
+            ignore_patterns: ['routes']
+
+        phpunit:
+            config_file: ~
+            testsuite: ~
+            group: []
+            always_execute: false
+
+        git_blacklist:
+            keywords:
+                - 'die('
+                - 'var_dump('
+                - ' exec('
+                - 'shell_exec('
+                - 'print_r('
+                - ' dd('
+                - '{dd('
+                - '}dd('
+                - ';dd('
+                - 'exit;'
+            triggered_by: [php]
+            regexp_type: G
+
+        securitychecker_enlightn:
+            lockfile: ./composer.lock
+            run_always: false
+
+        #Utiliza os valores default https://github.com/phpro/grumphp/blob/master/doc/tasks/git_commit_message.md
+        git_commit_message: null
+
+    testsuites:
+        git_pre_commit:
+            tasks:
+                - phpcs
+                - phpmd
+                - phpstan
+                - git_blacklist
+                - securitychecker_enlightn
+
+        git_pre_push:
+            tasks:
+                - phpunit

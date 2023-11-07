@@ -1,0 +1,93 @@
+version: "3.9"
+
+name: "minihub"
+
+services:
+    database:
+        image: mysql:8.0.31
+        container_name: minihub-db
+        environment:
+            MYSQL_USER: app.minihub
+            MYSQL_PASSWORD: minihubpw
+            MYSQL_ROOT_PASSWORD: minihubpw
+            MYSQL_DATABASE: minihub
+        ports:
+            - "3306:3306"
+        volumes:
+            - ./database/data:/var/lib/mysql
+        networks:
+            - minihub
+
+    phpmyadmin:
+        image: phpmyadmin:fpm-alpine
+        container_name: minihub-pma
+        volumes:
+            - phpmyadmin:/var/www/html
+        environment:
+            PMA_HOST: minihub-db
+            PMA_PORT: 3306
+            PMA_USER: root
+            PMA_PASSWORD: minihubpw
+            UPLOAD_LIMIT: 100M
+        networks:
+            - minihub
+        depends_on:
+            - database
+            - web
+
+    web:
+        image: nginx:1.23.3-alpine
+        container_name: minihub-web
+        working_dir: /home/apps/minihub
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - phpmyadmin:/var/www/html
+            - ../:/home/apps/minihub
+            - ./nginx/config/nginx.conf:/etc/nginx/conf.d/default.conf
+            - ./nginx/logs:/var/log/nginx
+            - ./nginx/ssl:/etc/nginx/ssl
+        networks:
+            - minihub
+
+    php:
+        image: minihub-php
+        build:
+            context: php/
+            args:
+                WORKDIR: /home/apps/minihub
+        container_name: minihub-php
+        volumes:
+            - ../:/home/apps/minihub
+            - ./php/overrides.ini:/etc/php/8.2/fpm/conf.d/99-overrides.ini
+        networks:
+            - minihub
+
+    node:
+        image: node:18.12-alpine
+        container_name: minihub-node
+        restart: "no"
+        working_dir: /home/apps/minihub
+        command: npm install
+        volumes:
+            - ../:/home/apps/minihub
+        networks:
+            - minihub
+
+    redis:
+        image: redis:alpine
+        container_name: minihub-redis
+        volumes:
+            - ./redis:/data
+        ports:
+            - "6379:6379"
+        networks:
+            - minihub
+
+volumes:
+    phpmyadmin:
+
+networks:
+    minihub:
+        driver: bridge

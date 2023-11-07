@@ -1,0 +1,12 @@
+parameters:
+    level: 8
+    checkMissingIterableValueType: false
+    inferPrivatePropertyTypeFromConstructor: true
+    excludePaths:
+        - tests/*
+    ignoreErrors:
+        # Ignora os erros das Facades e helpers do Laravel
+        - '#Call to an undefined static method Illuminate\\+#'
+        - '#Call to an undefined static method App\\+#'
+        #- '#Unable to resolve the template type TKey in call to function collect#'
+        #- '#Unable to resolve the template type TValue in call to function collect#'
